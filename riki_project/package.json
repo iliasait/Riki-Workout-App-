@@ -1,0 +1,24 @@
+{
+  "name": "riki_project",
+  "version": "1.0.0",
+  "description": "- `App.jsx` — Prototype React interactif (ouvrir dans Claude artifacts) - `logo_riki.png` — Logo officiel - `cdc_riki.pdf` — Cahier des charges - `rapport_riki.pdf` — Rapport de projet (~80 pages) - `README.md` — Ce fichier",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@capacitor/android": "^8.3.2",
+    "@capacitor/cli": "^8.3.2",
+    "@capacitor/core": "^8.3.2",
+    "@vitejs/plugin-react": "^6.0.1",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "vite": "^8.0.11"
+  }
+}
