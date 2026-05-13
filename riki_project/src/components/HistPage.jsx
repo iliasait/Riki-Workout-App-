@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { C, GRP_ICON, fmtD, volS, volE, nS, CARD, CARD_SOLID } from "../constants.js";
 import { ExoSvg, NI, Tag } from "./Icons.jsx";
 
-export default function HistPage({hist,exos,onD,planned,setPlanned,presets,onStartPlanned}) {
+export default function HistPage({hist,setHist,exos,onD,planned,setPlanned,presets,onStartPlanned}) {
   const [vm,setVm]=useState("list");
   const [mo,setMo]=useState(()=>{const d=new Date();return{y:d.getFullYear(),m:d.getMonth()};});
   const [planDay,setPlanDay]=useState(null);
@@ -34,19 +34,20 @@ export default function HistPage({hist,exos,onD,planned,setPlanned,presets,onSta
           {["L","M","M","J","V","S","D"].map((d,i)=>(<div key={i} style={{textAlign:"center",color:C.ts,fontSize:10,fontWeight:600,padding:5,letterSpacing:"0.5px"}}>{d}</div>))}
           {Array(fd).fill(null).map((_,i)=>(<div key={"b"+i}/>))}
           {Array.from({length:dim},(_,i)=>i+1).map(d=>{const h=has(d);const td=today===ds(d);const pl=hasPlan(d);const fut=isFuture(d);
-            return (<div key={d} onClick={()=>{if(h)onD(getH(d));else if(fut||td)setPlanDay(planDay===d?null:d);}} style={{textAlign:"center",padding:"9px 0",borderRadius:10,cursor:(h||fut)?"pointer":"default",background:h?"rgba(190,255,108,0.08)":pl?"rgba(190,255,108,0.03)":td?C.c1:"transparent",border:td?"1px solid rgba(190,255,108,0.2)":planDay===d?"1px solid "+C.gr:pl?"1px dashed rgba(190,255,108,0.2)":"1px solid transparent",transition:"all 0.15s ease"}}>
+            const past=!fut&&!td&&!h;
+            return (<div key={d} onClick={()=>{if(h)onD(getH(d));else if(fut||td)setPlanDay(planDay===d?null:d);else if(past)setPlanDay(planDay===d?null:d);}} style={{textAlign:"center",padding:"9px 0",borderRadius:10,cursor:"pointer",background:h?"rgba(190,255,108,0.08)":pl?"rgba(190,255,108,0.03)":td?C.c1:"transparent",border:td?"1px solid rgba(190,255,108,0.2)":planDay===d?"1px solid "+C.gr:pl?"1px dashed rgba(190,255,108,0.2)":"1px solid transparent",transition:"all 0.15s ease"}}>
               <span style={{color:h?C.gr:pl?C.gd:td?C.t:C.ts,fontSize:13,fontWeight:(h||pl)?700:400,fontVariantNumeric:"tabular-nums"}}>{d}</span>
               {h&&(<div style={{width:4,height:4,borderRadius:2,background:C.gr,margin:"3px auto 0",boxShadow:"0 0 4px rgba(190,255,108,0.3)"}}/>)}
               {pl&&!h&&(<div style={{width:4,height:4,borderRadius:2,background:C.gd,margin:"3px auto 0",opacity:0.6}}/>)}
             </div>);
           })}
         </div>
-        {planDay&&(isFuture(planDay)||today===ds(planDay))&&(<div style={{...CARD_SOLID,padding:14,marginTop:12,animation:"fadeInUp 0.2s ease"}}>
+        {planDay&&(<div style={{...CARD_SOLID,padding:14,marginTop:12,animation:"fadeInUp 0.2s ease"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-            <span style={{color:C.t,fontWeight:600,fontSize:13,fontFamily:C.display}}>Programmer le {planDay}/{mo.m+1}</span>
+            <span style={{color:C.t,fontWeight:600,fontSize:13,fontFamily:C.display}}>{isFuture(planDay)||today===ds(planDay)?"Programmer":"Enregistrer"} le {planDay}/{mo.m+1}</span>
             {hasPlan(planDay)&&(<button onClick={()=>{setPlanned(p=>p.filter(x=>x.date!==ds(planDay)));setPlanDay(null);}} style={{background:"none",border:"none",color:C.rd,fontSize:12,cursor:"pointer",fontFamily:C.body}}>Supprimer</button>)}
           </div>
-          <div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
+          {(isFuture(planDay)||today===ds(planDay))?(<div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
             {presets.map(p=>(<button key={p.id} onClick={()=>{
               const dateStr=ds(planDay);
               setPlanned(prev=>{const filtered=prev.filter(x=>x.date!==dateStr);return[...filtered,{date:dateStr,preset:p.nom,presetId:p.id}];});
@@ -57,7 +58,19 @@ export default function HistPage({hist,exos,onD,planned,setPlanned,presets,onSta
               setPlanned(prev=>{const filtered=prev.filter(x=>x.date!==dateStr);return[...filtered,{date:dateStr,preset:"Libre",presetId:null}];});
               setPlanDay(null);
             }} style={{padding:"9px 16px",borderRadius:12,border:"1px dashed "+C.gr,background:"transparent",color:C.gr,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:C.body}}>Séance libre</button>
-          </div>
+          </div>):(<div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
+            {presets.map(p=>(<button key={p.id} onClick={()=>{
+              const dateStr=ds(planDay);
+              const res=p.ids.map(id=>{const ex=exos.find(e=>e.id===id);if(!ex)return null;return{n:ex.n,g:ex.g,sets:[]};}).filter(Boolean);
+              setHist(h=>[{id:Date.now(),date:dateStr,dur:0,notes:"",exos:res},...h]);
+              setPlanDay(null);
+            }} style={{padding:"9px 16px",borderRadius:12,border:"1px solid "+C.c2,background:C.c2,color:C.t,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:C.body}}>{p.nom}</button>))}
+            <button onClick={()=>{
+              const dateStr=ds(planDay);
+              setHist(h=>[{id:Date.now(),date:dateStr,dur:0,notes:"Séance enregistrée",exos:[]},...h]);
+              setPlanDay(null);
+            }} style={{padding:"9px 16px",borderRadius:12,border:"1px dashed "+C.gr,background:"transparent",color:C.gr,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:C.body}}>Séance libre</button>
+          </div>)}
         </div>)}
       </div>)}
       {planned.filter(p=>p.date>=today).sort((a,b)=>a.date.localeCompare(b.date)).map(p=>(<div key={p.date} onClick={()=>{if(p.presetId)onStartPlanned(p);}} style={{...CARD,padding:"12px 14px",marginBottom:7,display:"flex",alignItems:"center",gap:12,cursor:"pointer",border:"1px dashed rgba(190,255,108,0.15)"}}>

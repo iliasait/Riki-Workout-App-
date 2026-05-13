@@ -131,7 +131,7 @@ export default function App() {
         {tab===0&&(<Dash onStart={()=>{changeTab(2);setSOn(true);}} sOn={sOn} presets={presets} setPresets={setPresets} onP={startP} streak={streak} goal={goal} setGoal={setGoal} workoutDays={workoutDays} exos={exos} hist={hist} theme={theme} toggleTheme={toggleTheme} planned={planned} setPlanned={setPlanned} onSlotSel={ex=>{setSIds(p=>[...new Set([...p,ex.id])]);changeTab(2);setSOn(true);setSStep("setup");}}/>)}
         {tab===1&&(<ExoList exos={exos} onD={e=>setOv({t:"exD",d:e})} onNew={()=>setOv({t:"nE"})}/>)}
         {tab===2&&(<SePage sOn={sOn} exos={exos} setExos={setExos} sIds={sIds} setSIds={setSIds} step={sStep} setStep={setSStep} rest={rest} setRest={setRest} mode={mode} setMode={setMode} tR={tR} setTR={setTR} tS={tS} setTS={setTS} cE={cE} setCE={setCE} cSI={cSI} setCSI={setCSI} allS={allS} setAllS={setAllS} onEnd={endSe} onCan={()=>{setSOn(false);setSStep("setup");setSIds([]);changeTab(0);}} onNP={()=>setOv({t:"nP"})}/>)}
-        {tab===3&&(<HistPage hist={hist} exos={exos} onD={s=>setOv({t:"hD",d:s})} planned={planned} setPlanned={setPlanned} presets={presets} onStartPlanned={p=>{const pr=presets.find(x=>x.id===p.presetId);if(pr)startP(pr);}}/>)}
+        {tab===3&&(<HistPage hist={hist} setHist={setHist} exos={exos} onD={s=>setOv({t:"hD",d:s})} planned={planned} setPlanned={setPlanned} presets={presets} onStartPlanned={p=>{const pr=presets.find(x=>x.id===p.presetId);if(pr)startP(pr);}}/>)}
         {tab===4&&(<StatsPage exos={exos} hist={hist}/>)}
         </div>
       </div>
