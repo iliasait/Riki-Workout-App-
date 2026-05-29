@@ -92,23 +92,17 @@ export default function App() {
   // Duolingo-style streak: count consecutive past weeks where workout days >= goal
   const streak=useMemo(()=>{
     if(!goal||goal<=0||hist.length===0) return 0;
+    // Bucket each session's weekday by the Monday (00:00 local) of its week
+    const weekStartTs=(d)=>{const x=new Date(d);x.setHours(0,0,0,0);x.setDate(x.getDate()-(x.getDay()+6)%7);return x.getTime();};
+    const byWeek={};
+    hist.forEach(h=>{const d=parseLocal(h.date);const ws=weekStartTs(d);(byWeek[ws]=byWeek[ws]||new Set()).add(d.getDay());});
     let count=0;
-    const checkDate=new Date(monday);
-    checkDate.setDate(checkDate.getDate()-1);
-    while(true){
-      const weekEnd=new Date(checkDate);
-      const weekStart=new Date(weekEnd);
-      weekStart.setDate(weekEnd.getDate()-(weekEnd.getDay()+6)%7);
-      weekStart.setHours(0,0,0,0);
-      weekEnd.setHours(23,59,59,999);
-      const days=new Set();
-      hist.forEach(h=>{
-        const d=parseLocal(h.date);
-        if(d>=weekStart&&d<=weekEnd) days.add(d.getDay());
-      });
-      if(days.size>=goal) count++;
+    const cursor=new Date(monday);
+    cursor.setDate(cursor.getDate()-7); // start from last completed week
+    for(let i=0;i<520;i++){ // hard cap (10 years) to prevent any infinite loop
+      const days=byWeek[cursor.getTime()];
+      if(days&&days.size>=goal){count++;cursor.setDate(cursor.getDate()-7);}
       else break;
-      checkDate.setDate(weekStart.getDate()-1);
     }
     return count;
   },[hist,goal,monday.getTime()]);
