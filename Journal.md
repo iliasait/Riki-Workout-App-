@@ -150,9 +150,19 @@ Apres l'ajout de la fonctionnalite d'enregistrement de seances sur jours passes,
 
 **Solution** : Remplacement de `toISOString()` par un calcul de la date locale coherent avec le reste de l'application (`getFullYear()`, `getMonth()`, `getDate()` avec formatage manuel sur deux chiffres).
 
+### Bug 3 : Compteur de records hebdomadaires fige a zero
+
+**Probleme** : Sur le tableau de bord, la tuile "Records" de la carte "Cette semaine" affichait toujours zero, car la valeur etait codee en dur (`const weekPR=0;`). Le compteur etait reste a l'etat de placeholder lors du developpement initial. Cela creait une incoherence visible : apres avoir battu plusieurs records lors d'une seance, le tableau de bord indiquait "0 PR" tandis que la page de statistiques affichait le nombre reel.
+
+**Solution** : Calcul effectif du nombre de records battus dans la semaine. Pour chaque exercice ayant un record enregistre, on verifie si une serie de la semaine en cours atteint ou egale ce record (en comparant le poids pour les exercices au poids, ou les repetitions/duree pour les autres types). Le calcul est entierement encadre par des verifications pour eviter tout plantage en l'absence de donnees.
+
 ### Methode de verification
 
-Les corrections ont ete validees en conditions reelles : injection de donnees de test contenant une seance back-datee inseree en derniere position, puis verification que l'historique s'affiche bien dans l'ordre chronologique decroissant, que l'enregistrement d'une seance sur un jour passe la positionne correctement dans la liste, et que les statistiques se calculent sans erreur. Aucune erreur console n'a ete relevee.
+Les corrections ont ete validees en conditions reelles dans le navigateur, en simulant un parcours utilisateur complet : creation d'objectif, lancement d'une seance via un preset, saisie des series avec test du maintien du poids entre les series, gestion du temps de repos, et enregistrement final. J'ai ensuite verifie que la seance etait correctement sauvegardee (cinq exercices, series et volume corrects), que les records etaient detectes et enregistres, que le tableau de bord et les statistiques affichaient des valeurs coherentes, que l'historique etait trie par date, et que le changement de theme clair/sombre fonctionnait avec les icones bien visibles dans les deux modes. Aucune erreur console n'a ete relevee durant l'ensemble des tests.
+
+### Limitation connue
+
+Au cours de cette revue, j'ai identifie une limitation fonctionnelle : pendant une seance, il n'est pas possible de passer a l'exercice suivant sans avoir valide le nombre de series prevu. Pour reduire le nombre de series d'un exercice en cours, l'utilisateur doit soit completer les series prevues, soit abandonner la seance. Ce comportement releve d'un choix de conception (l'application incite a respecter le programme configure) plutot que d'un defaut, mais constitue un axe d'amelioration possible (ajout d'un bouton pour passer un exercice).
 
 ---
 

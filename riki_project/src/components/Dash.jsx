@@ -14,7 +14,7 @@ export default function Dash({onStart,sOn,presets,setPresets,onP,streak,goal,set
   const weekHist=hist.filter(h=>parseLocal(h.date)>=mon);
   const weekVol=weekHist.reduce((a,s)=>a+s.exos.reduce((b,e)=>b+e.sets.reduce((c,st)=>c+st.p*st.r,0),0),0);
   const weekDur=weekHist.length>0?Math.round(weekHist.reduce((a,s)=>a+s.dur,0)/weekHist.length):0;
-  const weekPR=0;
+  const weekPR=(exos||[]).filter(e=>e.pr>0&&weekHist.some(s=>s.exos.some(x=>x.n===e.n&&x.sets.some(st=>((e.prType==="weight"?st.p:st.r))>=e.pr)))).length;
   const dayMap=[1,2,3,4,5,6,0];
   const today=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
   const upcoming=(planned||[]).filter(p=>p.date>=today).sort((a,b)=>a.date.localeCompare(b.date));
