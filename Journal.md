@@ -134,6 +134,28 @@ J'ai developpe une landing page statique en HTML/CSS/JS pur, comprenant : une se
 
 ---
 
+## Phase 6 : Revue de code et corrections
+
+Apres l'ajout de la fonctionnalite d'enregistrement de seances sur jours passes, j'ai realise une revue complete du code afin d'identifier d'eventuels effets de bord. Deux bugs ont ete detectes et corriges.
+
+### Bug 1 : Historique non trie par date
+
+**Probleme** : Les seances sont stockees dans un tableau en ordre d'insertion (les nouvelles seances sont ajoutees en tete via `[nouvelle, ...hist]`). Tant que toutes les seances etaient enregistrees le jour meme, l'ordre d'insertion correspondait a l'ordre chronologique. Mais avec la nouvelle fonctionnalite, une seance enregistree pour une date passee etait inseree en tete du tableau et apparaissait donc en haut de la liste de l'historique, comme si elle etait la plus recente. La courbe d'evolution du volume dans les statistiques etait egalement faussee car elle reposait sur l'ordre du tableau.
+
+**Solution** : Tri explicite par date au moment de l'affichage, sans modifier la structure de donnees stockee. Dans `HistPage.jsx`, la liste est triee par date decroissante (`.slice().sort((a,b) => b.date.localeCompare(a.date))`). Dans `StatsPage.jsx`, la courbe d'evolution est triee par date croissante avant de prendre les 12 dernieres seances. Le tri sur des chaines au format `YYYY-MM-DD` fonctionne directement avec une comparaison lexicographique.
+
+### Bug 2 : Incoherence de fuseau horaire dans le calendrier
+
+**Probleme** : Dans `HistPage.jsx`, la date du jour etait calculee avec `new Date().toISOString().slice(0,10)`, qui retourne la date en temps universel (UTC). Le reste de l'application utilise la date locale. En soiree, selon le decalage horaire, cette difference pouvait classer une date comme "future" ou "passee" de maniere incorrecte, ce qui affectait le comportement du calendrier (jour cliquable ou non, distinction entre programmer une seance future et enregistrer une seance passee).
+
+**Solution** : Remplacement de `toISOString()` par un calcul de la date locale coherent avec le reste de l'application (`getFullYear()`, `getMonth()`, `getDate()` avec formatage manuel sur deux chiffres).
+
+### Methode de verification
+
+Les corrections ont ete validees en conditions reelles : injection de donnees de test contenant une seance back-datee inseree en derniere position, puis verification que l'historique s'affiche bien dans l'ordre chronologique decroissant, que l'enregistrement d'une seance sur un jour passe la positionne correctement dans la liste, et que les statistiques se calculent sans erreur. Aucune erreur console n'a ete relevee.
+
+---
+
 ## Bilan technique
 
 ### Points forts

@@ -11,9 +11,9 @@ export default function HistPage({hist,setHist,exos,onD,planned,setPlanned,prese
   const ds=d=>mo.y+"-"+String(mo.m+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");
   const has=d=>hist.some(h=>h.date===ds(d));const getH=d=>hist.find(h=>h.date===ds(d));
   const hasPlan=d=>planned.some(p=>p.date===ds(d));
-  const today=new Date().toISOString().slice(0,10);
+  const tn=new Date();const today=tn.getFullYear()+"-"+String(tn.getMonth()+1).padStart(2,"0")+"-"+String(tn.getDate()).padStart(2,"0");
   const isFuture=d=>ds(d)>today;
-  const allHist=vm==="list"?hist:hist.filter(h=>{const d=new Date(h.date);return d.getFullYear()===mo.y&&d.getMonth()===mo.m;});
+  const allHist=(vm==="list"?hist:hist.filter(h=>{const d=new Date(h.date);return d.getFullYear()===mo.y&&d.getMonth()===mo.m;})).slice().sort((a,b)=>b.date.localeCompare(a.date));
 
   return (
     <div style={{padding:"14px 16px"}}>

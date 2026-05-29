@@ -17,7 +17,7 @@ export default function StatsPage({exos,hist}) {
   const mg=gd.length>0?Math.max(...gd.map(d=>d.v)):1;const totalV=gd.reduce((a,d)=>a+d.v,0);
   const prList=exos.filter(e=>e.pr>0&&(prTab==="all"||e.g===prTab)).sort((a,b)=>b.pr-a.pr);
 
-  const recentHist=[...hist].reverse().slice(-12);
+  const recentHist=[...hist].sort((a,b)=>a.date.localeCompare(b.date)).slice(-12);
   const evoData=recentHist.map(s=>s.exos.reduce((a,e)=>a+e.sets.reduce((b,st)=>b+st.p*st.r,0),0));
   const evoMin=evoData.length>0?Math.min(...evoData):0;
   const evoMax=evoData.length>0?Math.max(...evoData):1;
