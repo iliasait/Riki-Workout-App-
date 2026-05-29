@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { C, LOGO, CARD, CARD_SOLID } from "../constants.js";
+import { C, LOGO, CARD, CARD_SOLID, sessionVol } from "../constants.js";
 import { GRP_ICON } from "../constants.js";
 import { ExoSvg, FlameIcon, SlotIcon, NI } from "./Icons.jsx";
 import SlotM from "./SlotMachine.jsx";
 
-export default function Dash({onStart,sOn,presets,setPresets,onP,streak,goal,setGoal,workoutDays,exos,onSlotSel,hist,theme,toggleTheme,planned,setPlanned}) {
+export default function Dash({onStart,sOn,presets,setPresets,onP,streak,goal,setGoal,bw,setBw,workoutDays,exos,onSlotSel,hist,theme,toggleTheme,planned,setPlanned}) {
   const [showGoal,setShowGoal]=useState(false);
   const [showSlot,setShowSlot]=useState(false);
   const parseLocal=(s)=>{const p=s.split("-");return new Date(+p[0],p[1]-1,+p[2]);};
@@ -12,7 +12,7 @@ export default function Dash({onStart,sOn,presets,setPresets,onP,streak,goal,set
   const streakOk=weekDone>=goal;
   const now=new Date();const mon=new Date(now);mon.setDate(now.getDate()-(now.getDay()+6)%7);mon.setHours(0,0,0,0);
   const weekHist=hist.filter(h=>parseLocal(h.date)>=mon);
-  const weekVol=weekHist.reduce((a,s)=>a+s.exos.reduce((b,e)=>b+e.sets.reduce((c,st)=>c+st.p*st.r,0),0),0);
+  const weekVol=weekHist.reduce((a,s)=>a+sessionVol(s,bw),0);
   const weekDur=weekHist.length>0?Math.round(weekHist.reduce((a,s)=>a+s.dur,0)/weekHist.length):0;
   const weekPR=(exos||[]).filter(e=>e.pr>0&&weekHist.some(s=>s.exos.some(x=>x.n===e.n&&x.sets.some(st=>((e.prType==="weight"?st.p:st.r))>=e.pr)))).length;
   const dayMap=[1,2,3,4,5,6,0];
@@ -44,7 +44,13 @@ export default function Dash({onStart,sOn,presets,setPresets,onP,streak,goal,set
         </div>
         {showGoal&&(<div style={{marginBottom:14,...CARD_SOLID,padding:14,animation:"fadeInUp 0.2s ease"}}>
           <div style={{color:C.t,fontSize:13,fontWeight:600,marginBottom:10,fontFamily:C.display}}>Objectif hebdomadaire</div>
-          <div style={{display:"flex",gap:6}}>{[2,3,4,5,6,7].map(n=>(<button key={n} onClick={(e)=>{e.stopPropagation();setGoal(n);setShowGoal(false);}} style={{flex:1,padding:"11px 0",borderRadius:12,border:"none",cursor:"pointer",fontFamily:C.display,background:goal===n?C.gr:C.c2,color:goal===n?C.bg:C.ts,fontWeight:700,fontSize:15}}>{n}</button>))}</div>
+          <div style={{display:"flex",gap:6}}>{[2,3,4,5,6,7].map(n=>(<button key={n} onClick={(e)=>{e.stopPropagation();setGoal(n);}} style={{flex:1,padding:"11px 0",borderRadius:12,border:"none",cursor:"pointer",fontFamily:C.display,background:goal===n?C.gr:C.c2,color:goal===n?C.bg:C.ts,fontWeight:700,fontSize:15}}>{n}</button>))}</div>
+          <div style={{color:C.t,fontSize:13,fontWeight:600,margin:"14px 0 8px",fontFamily:C.display}}>Poids de corps</div>
+          <div style={{position:"relative"}}>
+            <input value={bw>0?bw:""} onChange={(e)=>{const v=parseFloat(e.target.value);setBw(isNaN(v)?0:v);}} onClick={(e)=>e.stopPropagation()} type="number" inputMode="decimal" placeholder="ex: 75" style={{width:"100%",padding:"10px 34px 10px 12px",borderRadius:12,border:"1px solid "+C.c2,background:C.c2,color:C.t,fontSize:14,fontWeight:600,outline:"none",boxSizing:"border-box",fontFamily:C.display}}/>
+            <span style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",color:C.ts,fontSize:12}}>kg</span>
+          </div>
+          <p style={{color:C.ts,fontSize:10,marginTop:6,opacity:0.7}}>Pour estimer le volume des exercices au poids du corps</p>
         </div>)}
       </div>
 

@@ -92,7 +92,7 @@ export default function SePage({sOn,exos,setExos,sIds,setSIds,step,setStep,rest,
   return (
     <div style={{padding:16}}>
       <div style={{display:"flex",gap:3,marginBottom:12}}>{sIds.map((_,i)=>(<div key={i} style={{flex:1,height:3,borderRadius:2,background:i<cE?C.gr:i===cE?C.gd:C.c2,transition:"background 0.3s ease"}}/>))}</div>
-      <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}><span style={{color:C.ts,fontSize:11,fontWeight:500}}>Exercice {cE+1}/{sIds.length}</span><button onClick={onCan} style={{background:"none",border:"none",color:C.rd,fontSize:12,cursor:"pointer",fontFamily:C.body,fontWeight:500}}>Abandonner</button></div>
+      <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}><span style={{color:C.ts,fontSize:11,fontWeight:500}}>Exercice {cE+1}/{sIds.length}</span><button onClick={onCan} style={{background:"none",border:"none",color:C.rd,fontSize:12,cursor:"pointer",fontFamily:C.body,fontWeight:500}}>Arrêter</button></div>
       <div style={{...CARD,padding:18,textAlign:"center",marginBottom:14}}>
         <div style={{overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center"}}><ExoSvg type={GRP_ICON[cur.g]||"generic"} size={60}/></div><h2 style={{color:C.t,fontSize:19,fontWeight:800,margin:"8px 0 3px",fontFamily:C.display}}>{cur.n}</h2><span style={{color:C.gr,fontSize:12,fontWeight:500}}>{cur.g}</span>
         <div style={{marginTop:12,display:"flex",justifyContent:"center",gap:20}}>

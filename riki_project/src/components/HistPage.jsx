@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { C, GRP_ICON, fmtD, volS, volE, nS, CARD, CARD_SOLID } from "../constants.js";
+import { C, GRP_ICON, fmtD, volS, volE, exoVol, sessionVol, nS, CARD, CARD_SOLID } from "../constants.js";
 import { ExoSvg, NI, Tag } from "./Icons.jsx";
 
-export default function HistPage({hist,setHist,exos,onD,planned,setPlanned,presets,onStartPlanned}) {
+export default function HistPage({hist,setHist,exos,onD,planned,setPlanned,presets,bw=0,onStartPlanned}) {
   const [vm,setVm]=useState("list");
   const [mo,setMo]=useState(()=>{const d=new Date();return{y:d.getFullYear(),m:d.getMonth()};});
   const [planDay,setPlanDay]=useState(null);
@@ -61,7 +61,7 @@ export default function HistPage({hist,setHist,exos,onD,planned,setPlanned,prese
           </div>):(<div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
             {presets.map(p=>(<button key={p.id} onClick={()=>{
               const dateStr=ds(planDay);
-              const res=p.ids.map(id=>{const ex=exos.find(e=>e.id===id);if(!ex)return null;return{n:ex.n,g:ex.g,sets:[]};}).filter(Boolean);
+              const res=p.ids.map(id=>{const ex=exos.find(e=>e.id===id);if(!ex)return null;return{n:ex.n,g:ex.g,prType:ex.prType,sets:[]};}).filter(Boolean);
               setHist(h=>[{id:Date.now(),date:dateStr,dur:0,notes:"",exos:res},...h]);
               setPlanDay(null);
             }} style={{padding:"9px 16px",borderRadius:12,border:"1px solid "+C.c2,background:C.c2,color:C.t,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:C.body}}>{p.nom}</button>))}
@@ -78,7 +78,7 @@ export default function HistPage({hist,setHist,exos,onD,planned,setPlanned,prese
         <div style={{flex:1}}><div style={{color:C.gd,fontWeight:600,fontSize:13,textTransform:"capitalize"}}>{fmtD(p.date)}</div><div style={{color:C.ts,fontSize:11,marginTop:1}}>{p.preset}</div></div>
         <span style={{color:C.gd,fontSize:10,fontWeight:600,background:"rgba(138,255,0,0.08)",padding:"4px 10px",borderRadius:8}}>Programmé</span>
       </div>))}
-      {allHist.map((s,idx)=>{const vol=volE(s.exos);const ns=nS(s.exos);
+      {allHist.map((s,idx)=>{const vol=sessionVol(s,bw);const ns=nS(s.exos);
         return (<div key={s.id} onClick={()=>onD(s)} style={{...CARD,padding:"12px 14px",marginBottom:7,display:"flex",alignItems:"center",gap:12,cursor:"pointer",animation:"stagger1 0.3s ease both",animationDelay:(idx%8)*30+"ms"}}>
           <div style={{width:42,height:42,borderRadius:13,background:"rgba(190,255,108,0.06)",display:"flex",alignItems:"center",justifyContent:"center"}}><ExoSvg type={GRP_ICON[s.exos[0]?.g]||"generic"} size={22}/></div>
           <div style={{flex:1}}><div style={{color:C.t,fontWeight:600,fontSize:13,textTransform:"capitalize"}}>{fmtD(s.date)}</div><div style={{color:C.ts,fontSize:11,marginTop:1}}>{s.dur}min · {s.exos.length} exo · {ns} séries</div></div>
@@ -90,8 +90,8 @@ export default function HistPage({hist,setHist,exos,onD,planned,setPlanned,prese
   );
 }
 
-export function HistDetail({se,onBack,onCopy}) {
-  const tv=volE(se.exos);const ts=nS(se.exos);
+export function HistDetail({se,onBack,onCopy,bw=0}) {
+  const tv=sessionVol(se,bw);const ts=nS(se.exos);
   return (
     <div style={{padding:18}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
@@ -101,13 +101,14 @@ export function HistDetail({se,onBack,onCopy}) {
       <h2 style={{color:C.t,fontSize:20,fontWeight:800,margin:"0 0 6px",textTransform:"capitalize",fontFamily:C.display}}>{fmtD(se.date)}</h2>
       <div style={{display:"flex",gap:7,marginBottom:16,marginTop:10}}><Tag i="⏱️" t={se.dur+" min"}/><Tag i="🏋️" t={ts+" séries"}/><Tag i="📊" t={tv.toFixed(0)+" kg"}/></div>
       {se.notes&&(<div style={{...CARD_SOLID,padding:12,marginBottom:12}}><p style={{color:C.t,fontSize:13,margin:0}}>📝 {se.notes}</p></div>)}
-      {se.exos.map((exo,i)=>{const ev=volS(exo.sets);
+      {se.exos.map((exo,i)=>{const ev=exoVol(exo,bw);const isDur=exo.prType==="duration";
         return (<div key={i} style={{...CARD_SOLID,padding:12,marginBottom:7}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
             <div style={{display:"flex",alignItems:"center",gap:8}}><ExoSvg type={GRP_ICON[exo.g]||"generic"} size={20}/><span style={{color:C.t,fontWeight:600,fontSize:14}}>{exo.n}</span></div>
-            <span style={{color:C.gr,fontSize:12,fontWeight:700,fontVariantNumeric:"tabular-nums"}}>{ev.toFixed(0)} kg</span>
+            {!isDur&&ev>0&&(<span style={{color:C.gr,fontSize:12,fontWeight:700,fontVariantNumeric:"tabular-nums"}}>{ev.toFixed(0)} kg</span>)}
           </div>
-          {exo.sets.map((st,j)=>(<div key={j} style={{display:"flex",justifyContent:"space-between",padding:"3px 0",fontSize:13}}><span style={{color:C.ts,width:22,fontFamily:C.display,fontWeight:600}}>{j+1}.</span><span style={{flex:1,color:C.t}}>{st.p}kg × {st.r}</span><span style={{color:C.ts,fontVariantNumeric:"tabular-nums"}}>{(st.p*st.r).toFixed(0)}</span></div>))}
+          {exo.sets.map((st,j)=>{const isBw=!isDur&&st.p<=0;const label=isDur?(st.r+"s"):isBw?(st.r+" reps"):(st.p+"kg × "+st.r);const val=(isDur||isBw)?"":(st.p*st.r).toFixed(0);
+            return (<div key={j} style={{display:"flex",justifyContent:"space-between",padding:"3px 0",fontSize:13}}><span style={{color:C.ts,width:22,fontFamily:C.display,fontWeight:600}}>{j+1}.</span><span style={{flex:1,color:C.t}}>{label}</span><span style={{color:C.ts,fontVariantNumeric:"tabular-nums"}}>{val}</span></div>);})}
         </div>);
       })}
     </div>

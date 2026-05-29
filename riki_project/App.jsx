@@ -35,6 +35,8 @@ export default function App() {
   useEffect(()=>{try{localStorage.setItem("riki_planned",JSON.stringify(planned))}catch{}},[planned]);
   const [goal,setGoal]=useState(()=>{try{return parseInt(localStorage.getItem("riki_goal"))||0}catch{return 0}});
   useEffect(()=>{try{localStorage.setItem("riki_goal",goal)}catch{}},[goal]);
+  const [bw,setBw]=useState(()=>{try{return parseFloat(localStorage.getItem("riki_bw"))||0}catch{return 0}});
+  useEffect(()=>{try{localStorage.setItem("riki_bw",bw)}catch{}},[bw]);
   const [onboarded,setOnboarded]=useState(()=>{try{return localStorage.getItem("riki_onboarded")==="1"}catch{return false}});
   const [theme,setTheme]=useState(()=>{const t=localStorage.getItem("riki_theme")||"dark";applyTheme(t);return t;});
   useMemo(()=>{applyTheme(theme);try{localStorage.setItem("riki_theme",theme)}catch{}},[theme]);
@@ -70,14 +72,17 @@ export default function App() {
     const ids=se.exos.map(ex=>{const f=exos.find(e=>e.n===ex.n);return f?f.id:null;}).filter(Boolean);
     setSIds(ids);changeTab(2);setSOn(true);setSStep("setup");setOv(null);
   };
-  const endSe=()=>{
+  // Save whatever sets have been logged (only exercises with at least one set), then reset.
+  // Used both when finishing normally and when abandoning a session, so any work done counts.
+  const finishSe=()=>{
     const res=sIds.map(id=>{const ex=exos.find(e=>e.id===id);const ss=allS[id]||[];if(ss.length===0)return null;
       const maxW=Math.max(...ss.map(s=>s.w));if(maxW>(ex.pr||0)&&ex.prType==="weight")setExos(prev=>prev.map(e=>e.id===id?{...e,pr:maxW}:e));
-      return{n:ex.n,g:ex.g,sets:ss.map(x=>({p:x.w,r:x.r}))};}).filter(Boolean);
+      return{n:ex.n,g:ex.g,prType:ex.prType,sets:ss.map(x=>({p:x.w,r:x.r}))};}).filter(Boolean);
     const localDate=`${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,"0")}-${String(new Date().getDate()).padStart(2,"0")}`;
     if(res.length>0)setHist(h=>[{id:Date.now(),date:localDate,dur:Math.floor(Math.random()*30)+35,notes:"",exos:res},...h]);
     setSOn(false);setSStep("setup");setSIds([]);setAllS({});setCE(0);setCSI(0);changeTab(0);
   };
+  const endSe=finishSe;
 
   const navItems=[{k:"home",l:"Accueil",i:"home"},{k:"exos",l:"Exercices",i:"dumbbell"},{k:"se",l:"Séance",i:"bolt"},{k:"hist",l:"Historique",i:"history"},{k:"stats",l:"Stats",i:"stats"}];
 
@@ -111,22 +116,22 @@ export default function App() {
     <div style={{width:"100%",height:"100dvh",background:C.bg,overflow:"hidden",fontFamily:"'Outfit',sans-serif",position:"relative",margin:"0 auto",display:"flex",flexDirection:"column"}}
       onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
 
-      {!onboarded&&(<Onboarding onDone={(g)=>{setGoal(g);setOnboarded(true);try{localStorage.setItem("riki_goal",g);localStorage.setItem("riki_onboarded","1")}catch{}}}/>)}
+      {!onboarded&&(<Onboarding onDone={(g,weight)=>{setGoal(g);if(weight>0)setBw(weight);setOnboarded(true);try{localStorage.setItem("riki_goal",g);if(weight>0)localStorage.setItem("riki_bw",weight);localStorage.setItem("riki_onboarded","1")}catch{}}}/>)}
 
       {onboarded&&<><div style={{height:"env(safe-area-inset-top,0px)",flexShrink:0,background:C.bg}}/>
       <div ref={contentRef} style={{flex:1,overflow:"auto",position:"relative",background:theme==="dark"?"radial-gradient(ellipse at 50% 0%, rgba(190,255,108,0.03) 0%, transparent 50%)":"radial-gradient(ellipse at 50% 0%, rgba(76,175,0,0.02) 0%, transparent 50%)"}}>
         {ov&&(<div key={ov.t+(ov.d?.id||"")} ref={el=>{if(el)el.scrollTop=0;}} style={{position:"absolute",inset:0,background:C.bg,zIndex:100,overflow:"auto",animation:"fadeInUp 0.25s ease"}}>
           {ov.t==="exD"&&(<ExoDetail exo={ov.d} onBack={()=>setOv(null)} exos={exos} setExos={setExos} presets={presets} setPresets={setPresets}/>)}
-          {ov.t==="hD"&&(<HistDetail se={ov.d} onBack={()=>setOv(null)} onCopy={()=>copySe(ov.d)}/>)}
+          {ov.t==="hD"&&(<HistDetail se={ov.d} onBack={()=>setOv(null)} onCopy={()=>copySe(ov.d)} bw={bw}/>)}
           {ov.t==="nE"&&(<NewExo exos={exos} setExos={setExos} onBack={()=>setOv(null)}/>)}
           {ov.t==="nP"&&(<NewPreset exos={exos} presets={presets} setPresets={setPresets} onBack={()=>setOv(null)}/>)}
         </div>)}
         <div key={tab} style={{animation:animating?(slideDir>0?"slideInRight":"slideInLeft")+" 0.3s ease":"none"}}>
-        {tab===0&&(<Dash onStart={()=>{changeTab(2);setSOn(true);}} sOn={sOn} presets={presets} setPresets={setPresets} onP={startP} streak={streak} goal={goal} setGoal={setGoal} workoutDays={workoutDays} exos={exos} hist={hist} theme={theme} toggleTheme={toggleTheme} planned={planned} setPlanned={setPlanned} onSlotSel={ex=>{setSIds(p=>[...new Set([...p,ex.id])]);changeTab(2);setSOn(true);setSStep("setup");}}/>)}
+        {tab===0&&(<Dash onStart={()=>{changeTab(2);setSOn(true);}} sOn={sOn} presets={presets} setPresets={setPresets} onP={startP} streak={streak} goal={goal} setGoal={setGoal} bw={bw} setBw={setBw} workoutDays={workoutDays} exos={exos} hist={hist} theme={theme} toggleTheme={toggleTheme} planned={planned} setPlanned={setPlanned} onSlotSel={ex=>{setSIds(p=>[...new Set([...p,ex.id])]);changeTab(2);setSOn(true);setSStep("setup");}}/>)}
         {tab===1&&(<ExoList exos={exos} onD={e=>setOv({t:"exD",d:e})} onNew={()=>setOv({t:"nE"})}/>)}
-        {tab===2&&(<SePage sOn={sOn} exos={exos} setExos={setExos} sIds={sIds} setSIds={setSIds} step={sStep} setStep={setSStep} rest={rest} setRest={setRest} mode={mode} setMode={setMode} tR={tR} setTR={setTR} tS={tS} setTS={setTS} cE={cE} setCE={setCE} cSI={cSI} setCSI={setCSI} allS={allS} setAllS={setAllS} onEnd={endSe} onCan={()=>{setSOn(false);setSStep("setup");setSIds([]);changeTab(0);}} onNP={()=>setOv({t:"nP"})}/>)}
-        {tab===3&&(<HistPage hist={hist} setHist={setHist} exos={exos} onD={s=>setOv({t:"hD",d:s})} planned={planned} setPlanned={setPlanned} presets={presets} onStartPlanned={p=>{const pr=presets.find(x=>x.id===p.presetId);if(pr)startP(pr);}}/>)}
-        {tab===4&&(<StatsPage exos={exos} hist={hist}/>)}
+        {tab===2&&(<SePage sOn={sOn} exos={exos} setExos={setExos} sIds={sIds} setSIds={setSIds} step={sStep} setStep={setSStep} rest={rest} setRest={setRest} mode={mode} setMode={setMode} tR={tR} setTR={setTR} tS={tS} setTS={setTS} cE={cE} setCE={setCE} cSI={cSI} setCSI={setCSI} allS={allS} setAllS={setAllS} onEnd={endSe} onCan={finishSe} onNP={()=>setOv({t:"nP"})}/>)}
+        {tab===3&&(<HistPage hist={hist} setHist={setHist} exos={exos} onD={s=>setOv({t:"hD",d:s})} planned={planned} setPlanned={setPlanned} presets={presets} bw={bw} onStartPlanned={p=>{const pr=presets.find(x=>x.id===p.presetId);if(pr)startP(pr);}}/>)}
+        {tab===4&&(<StatsPage exos={exos} hist={hist} bw={bw}/>)}
         </div>
       </div>
 

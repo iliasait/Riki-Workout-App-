@@ -1,24 +1,24 @@
 import React, { useState } from "react";
-import { C, GROUPS, GRP_ICON, volS, prFmt, CARD, CARD_SOLID } from "../constants.js";
+import { C, GROUPS, GRP_ICON, volS, exoVol, sessionVol, prFmt, CARD, CARD_SOLID } from "../constants.js";
 import { ExoSvg, Chip } from "./Icons.jsx";
 
-export default function StatsPage({exos,hist}) {
+export default function StatsPage({exos,hist,bw=0}) {
   const [prTab,setPrTab]=useState("all");const [showAllPR,setShowAllPR]=useState(false);
 
   const dl=["L","M","M","J","V","S","D"];
   const dayMap=[1,2,3,4,5,6,0];
   const now=new Date();const mon=new Date(now);mon.setDate(now.getDate()-(now.getDay()+6)%7);mon.setHours(0,0,0,0);
   const data=dayMap.map(jsDay=>{
-    return hist.filter(h=>{const d=new Date(h.date);return d>=mon&&d.getDay()===jsDay;}).reduce((a,s)=>a+s.exos.reduce((b,e)=>b+e.sets.reduce((c,st)=>c+st.p*st.r,0),0),0);
+    return hist.filter(h=>{const d=new Date(h.date);return d>=mon&&d.getDay()===jsDay;}).reduce((a,s)=>a+sessionVol(s,bw),0);
   });
   const mx=Math.max(...data,1);
 
-  const gd=GROUPS.filter(g=>g!=="Cardio").map(g=>{const v=hist.reduce((a,s)=>a+s.exos.filter(e=>e.g===g).reduce((b,e)=>b+volS(e.sets),0),0);return{g,v};}).filter(d=>d.v>0).sort((a,b)=>b.v-a.v);
+  const gd=GROUPS.filter(g=>g!=="Cardio").map(g=>{const v=hist.reduce((a,s)=>a+s.exos.filter(e=>e.g===g).reduce((b,e)=>b+exoVol(e,bw),0),0);return{g,v};}).filter(d=>d.v>0).sort((a,b)=>b.v-a.v);
   const mg=gd.length>0?Math.max(...gd.map(d=>d.v)):1;const totalV=gd.reduce((a,d)=>a+d.v,0);
   const prList=exos.filter(e=>e.pr>0&&(prTab==="all"||e.g===prTab)).sort((a,b)=>b.pr-a.pr);
 
   const recentHist=[...hist].sort((a,b)=>a.date.localeCompare(b.date)).slice(-12);
-  const evoData=recentHist.map(s=>s.exos.reduce((a,e)=>a+e.sets.reduce((b,st)=>b+st.p*st.r,0),0));
+  const evoData=recentHist.map(s=>sessionVol(s,bw));
   const evoMin=evoData.length>0?Math.min(...evoData):0;
   const evoMax=evoData.length>0?Math.max(...evoData):1;
   const evoRange=evoMax-evoMin||1;

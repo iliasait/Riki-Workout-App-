@@ -147,6 +147,10 @@ export const INIT_EX = [
 export const fmtD = (d) => new Date(d).toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
 export const volS = (sets) => sets.reduce((a,s)=>a+s.p*s.r,0);
 export const volE = (exos) => exos.reduce((a,e)=>a+volS(e.sets),0);
+// Volume of one logged exercise. Bodyweight (reps-type) exercises use an estimated
+// load = bodyweight × total reps. Duration (cardio/gainage) counts as 0. Others = Σ poids×reps.
+export const exoVol = (exo, bw=0) => exo.prType==="reps" ? (bw>0?bw:0)*exo.sets.reduce((a,s)=>a+s.r,0) : exo.prType==="duration" ? 0 : exo.sets.reduce((a,s)=>a+s.p*s.r,0);
+export const sessionVol = (session, bw=0) => session.exos.reduce((a,e)=>a+exoVol(e,bw),0);
 export const nS = (exos) => exos.reduce((a,e)=>a+e.sets.length,0);
 export const prFmt = (ex) => ex.prType==="duration"?ex.pr+"s":ex.prType==="reps"?ex.pr+" reps":ex.pr+" kg";
 

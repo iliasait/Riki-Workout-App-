@@ -166,6 +166,18 @@ Apres l'ajout de la fonctionnalite d'enregistrement de seances sur jours passes,
 
 Les corrections ont ete validees en conditions reelles dans le navigateur, en simulant un parcours utilisateur complet : creation d'objectif, lancement d'une seance via un preset, saisie des series avec test du maintien du poids entre les series, gestion du temps de repos, et enregistrement final. J'ai ensuite verifie que la seance etait correctement sauvegardee (cinq exercices, series et volume corrects), que les records etaient detectes et enregistres, que le tableau de bord et les statistiques affichaient des valeurs coherentes, que l'historique etait trie par date, et que le changement de theme clair/sombre fonctionnait avec les icones bien visibles dans les deux modes. Aucune erreur console n'a ete relevee durant l'ensemble des tests.
 
+### Bug 5 : Abandon de seance sans sauvegarde du travail effectue
+
+**Probleme** : Lorsqu'on abandonnait une seance en cours, les records personnels (PR) etaient bien conserves (ils sont ecrits immediatement a chaque serie validee), mais les series realisees n'etaient pas enregistrees dans l'historique. Resultat incoherent : un record pouvait apparaitre dans les statistiques sans qu'aucune seance correspondante ne figure dans l'historique, et le volume des series faites avant l'abandon etait perdu.
+
+**Solution** : La logique de sauvegarde a ete factorisee dans une fonction unique utilisee a la fois pour terminer normalement une seance et pour l'arreter en cours. A l'arret, toutes les series deja validees sont enregistrees (seuls les exercices comportant au moins une serie sont conserves). Si aucune serie n'a ete faite, rien n'est enregistre. Le bouton a ete renomme d'"Abandonner" en "Arreter" pour refleter ce comportement (le travail effectue est conserve).
+
+### Amelioration : prise en compte du poids de corps dans le volume
+
+**Constat** : Les exercices au poids du corps (pompes, tractions, dips, abdominaux...) n'ajoutaient rien au volume total, qui se calcule en kilogrammes (poids souleve x repetitions). Or, sur ces exercices, le pratiquant deplace bien la masse de son corps a chaque repetition.
+
+**Solution** : Ajout d'un champ "poids de corps" (saisi a l'onboarding, optionnel, et modifiable depuis les reglages de l'accueil). Le volume des exercices au poids du corps est desormais estime comme poids de corps x repetitions. Les exercices avec charge conservent le calcul poids x repetitions, et le cardio/gainage (type duree) reste a zero. Le type de chaque exercice est stocke dans l'historique pour que ce calcul soit fiable. Si le poids de corps n'est pas renseigne, ces exercices comptent pour zero (comportement de repli sans erreur). L'affichage du detail d'une seance distingue clairement les series au poids du corps (affichees en "X reps") des series avec charge (affichees en "X kg x reps").
+
 ### Limitation connue
 
 Au cours de cette revue, j'ai identifie une limitation fonctionnelle : pendant une seance, il n'est pas possible de passer a l'exercice suivant sans avoir valide le nombre de series prevu. Pour reduire le nombre de series d'un exercice en cours, l'utilisateur doit soit completer les series prevues, soit abandonner la seance. Ce comportement releve d'un choix de conception (l'application incite a respecter le programme configure) plutot que d'un defaut, mais constitue un axe d'amelioration possible (ajout d'un bouton pour passer un exercice).
